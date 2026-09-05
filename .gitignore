@@ -8,10 +8,15 @@ yarn-error.log*
 # Python / 后端
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
 venv/
 .pytest_cache/
+.mypy_cache/
+
+# 环境变量与本地数据库（不提交密钥与数据）
 .env
+*.db
 
 # 敏感数据与上传（简历等，禁止入库）
 uploads/
