@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>面试大师 · 候选人端</title>
+<style>
+/* ============================================================
+   设计系统（候选人端 · PC Web）
+   关键词：专业 / 可信 / 冷静克制 —— 候选人处于紧张状态，
+   界面要给人「公正、清晰、可预期」的感受。
+   ============================================================ */
+:root{
+  /* 品牌色 —— 靛蓝为主，紫罗兰点缀 AI 属性 */
+  --brand:       #4f46e5;
+  --brand-600:   #4338ca;
+  --brand-700:   #3730a3;
+  --brand-50:    #eef2ff;
+  --brand-100:   #e0e7ff;
+  --ai:          #7c3aed;
+  --ai-soft:     #f5f3ff;
+
+  /* 中性色 */
+  --bg:          #f6f7fb;
+  --surface:     #ffffff;
+  --ink-900:     #0f172a;
+  --ink-700:     #334155;
+  --ink-500:     #64748b;
+  --ink-400:     #94a3b8;
+  --line:        #e2e8f0;
+  --line-soft:   #eef2f7;
+
+  /* 语义色 */
+  --success:     #059669;  --success-bg: #ecfdf5;
+  --warning:     #d97706;  --warning-bg: #fffbeb;
+  --danger:      #dc2626;  --danger-bg:  #fef2f2;
+  --info:        #2563eb;  --info-bg:    #eff6ff;
+
+  /* 尺寸与阴影 */
+  --r-lg: 16px; --r-md: 12px; --r-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+  --shadow-md: 0 6px 24px -8px rgba(79,70,229,.16);
+  --shadow-lg: 0 24px 60px -24px rgba(15,23,42,.25);
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+          "Segoe UI", "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--ink-900);
+  font-size:14px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.hidden{ display:none !important; }
+button{ font-family:inherit; cursor:pointer; }
+input,textarea{ font-family:inherit; color:inherit; }
+a{ color:var(--brand); text-decoration:none; }
+
+/* ---------- 通用组件 ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  height:42px; padding:0 20px; border-radius:var(--r-sm);
+  font-size:14px; font-weight:600; border:1px solid transparent;
+  transition:transform .06s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+  user-select:none;
+}
+.btn:active{ transform:translateY(1px); }
+.btn-primary{ background:linear-gradient(135deg,var(--brand),var(--brand-700)); color:#fff; box-shadow:var(--shadow-md); }
+.btn-primary:hover{ box-shadow:0 10px 28px -8px rgba(79,70,229,.4); filter:brightness(1.04); }
+.btn-primary:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
+.btn-ghost{ background:var(--surface); color:var(--ink-700); border-color:var(--line); }
+.btn-ghost:hover{ background:var(--bg); border-color:#cbd5e1; }
+.btn-danger{ background:var(--danger); color:#fff; }
+.btn-danger:hover{ background:#b91c1c; }
+.btn-lg{ height:48px; padding:0 28px; font-size:15px; }
+.btn-block{ width:100%; }
+
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  height:24px; padding:0 10px; border-radius:999px;
+  font-size:12px; font-weight:600; line-height:1; white-space:nowrap;
+}
+.badge .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+.badge-pending{ background:var(--info-bg); color:var(--info); }
+.badge-waiting{ background:var(--warning-bg); color:var(--warning); }
+.badge-done{ background:var(--success-bg); color:var(--success); }
+.badge-gray{ background:#f1f5f9; color:var(--ink-500); }
+
+.field-label{ display:block; font-size:13px; font-weight:600; color:var(--ink-700); margin-bottom:6px; }
+.input{
+  width:100%; height:44px; padding:0 14px; border-radius:var(--r-sm);
+  border:1px solid var(--line); background:#fff; font-size:14px;
+  outline:none; transition:border-color .15s, box-shadow .15s;
+}
+.input:focus{ border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-50); }
+.input::placeholder{ color:var(--ink-400); }
+
+.card{ background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); }
+
+/* 顶部品牌标 */
+.logo-mark{
+  width:38px; height:38px; border-radius:11px; flex-shrink:0;
+  background:linear-gradient(135deg,var(--brand),var(--ai));
+  display:grid; place-items:center; color:#fff; box-shadow:var(--shadow-md);
+}
+.logo-mark svg{ width:22px; height:22px; }
+
+/* ---------- 登录页 ---------- */
+#view-login{ min-height:100vh; display:grid; grid-template-columns: 1.05fr 1fr; }
+.login-brand{
+  position:relative; overflow:hidden; color:#fff;
+  background:linear-gradient(150deg,#312e81 0%,#4f46e5 48%,#7c3aed 100%);
+  padding:64px 72px; display:flex; flex-direction:column; justify-content:space-between;
+}
+.login-brand::before{
+  content:""; position:absolute; inset:0;
+  background:
+    radial-gradient(600px 400px at 85% -10%, rgba(255,255,255,.18), transparent 60%),
+    radial-gradient(500px 380px at -10% 110%, rgba(255,255,255,.12), transparent 60%);
+}
+.login-brand::after{
+  content:""; position:absolute; inset:0; opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:radial-gradient(700px 500px at 30% 20%, #000 0%, transparent 70%);
+}
+.login-brand > *{ position:relative; z-index:1; }
+.login-brand .logo{ display:flex; align-items:center; gap:12px; }
+.login-brand .logo .mark{ width:44px; height:44px; border-radius:12px; background:rgba(255,255,255,.16); backdrop-filter:blur(6px); display:grid; place-items:center; border:1px solid rgba(255,255,255,.2); }
+.login-brand h1{ font-size:26px; font-weight:700; margin:0; letter-spacing:.5px; }
+.login-brand .sub{ font-size:13px; opacity:.8; margin-top:4px; }
+.login-brand .headline{ margin:48px 0; }
+.login-brand .headline h2{ font-size:34px; font-weight:800; line-height:1.35; margin:0 0 16px; letter-spacing:.5px; }
+.login-brand .headline p{ font-size:15px; opacity:.86; line-height:1.8; max-width:440px; margin:0; }
+.login-brand .features{ display:grid; gap:14px; }
+.login-brand .feature{ display:flex; gap:12px; align-items:flex-start; }
+.login-brand .feature .ic{ width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,.14); display:grid; place-items:center; font-size:15px; flex-shrink:0; }
+.login-brand .feature b{ display:block; font-size:14px; }
+.login-brand .feature span{ font-size:13px; opacity:.78; }
+.login-brand .foot{ font-size:12px; opacity:.55; }
+
+.login-form{
+  display:flex; align-items:center; justify-content:center; padding:48px;
+}
+.login-form .box{ width:100%; max-width:400px; }
+.login-form h2{ font-size:24px; font-weight:700; margin:0 0 6px; }
+.login-form .lead{ color:var(--ink-500); margin:0 0 32px; font-size:14px; }
+.login-form .row{ margin-bottom:20px; }
+.login-form .row .hint{ font-size:12px; color:var(--ink-400); margin-top:6px; }
+.login-form .forgot{ font-size:13px; }
+.divider{ display:flex; align-items:center; gap:14px; margin:24px 0; color:var(--ink-400); font-size:12px; }
+.divider::before,.divider::after{ content:""; flex:1; height:1px; background:var(--line); }
+.login-form .switch{ text-align:center; font-size:14px; color:var(--ink-500); margin-top:24px; }
+
+/* ---------- 应用顶栏 ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  background:rgba(255,255,255,.82); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line-soft);
+}
+.topbar .inner{ max-width:1120px; margin:0 auto; height:64px; padding:0 24px; display:flex; align-items:center; justify-content:space-between; }
+.topbar .left{ display:flex; align-items:center; gap:12px; }
+.topbar .title{ font-size:16px; font-weight:700; }
+.topbar .title small{ display:block; font-size:11px; font-weight:500; color:var(--ink-400); margin-top:-2px; }
+.topbar .user{ display:flex; align-items:center; gap:10px; }
+.topbar .user .meta{ text-align:right; line-height:1.25; }
+.topbar .user .meta b{ display:block; font-size:13px; }
+.topbar .user .meta span{ font-size:11px; color:var(--ink-400); }
+.avatar{
+  width:36px; height:36px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,var(--brand),var(--ai)); color:#fff;
+  display:grid; place-items:center; font-size:14px; font-weight:700;
+}
+.topbar .logout{ font-size:13px; color:var(--ink-500); border:1px solid var(--line); border-radius:8px; padding:6px 12px; background:#fff; }
+.topbar .logout:hover{ background:var(--bg); color:var(--ink-700); }
+
+main.app{ max-width:1120px; margin:0 auto; padding:32px 24px 80px; }
+
+/* ---------- 面试大厅 ---------- */
+.page-head{ margin-bottom:24px; }
+.page-head h1{ font-size:24px; font-weight:800; margin:0 0 6px; letter-spacing:.3px; }
+.page-head p{ margin:0; color:var(--ink-500); }
+.stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+.stat{ background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--r-lg); padding:18px 20px; box-shadow:var(--shadow-sm); }
+.stat .num{ font-size:28px; font-weight:800; line-height:1.1; }
+.stat .lbl{ font-size:12px; color:var(--ink-500); margin-top:4px; }
+.stat .num.blue{ color:var(--brand); } .stat .num.amber{ color:var(--warning); } .stat .num.green{ color:var(--success); }
+
+.section-title{ font-size:15px; font-weight:700; margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+.interview-list{ display:grid; gap:14px; }
+.interview-card{ padding:20px 22px; display:flex; align-items:center; gap:18px; transition:box-shadow .18s, transform .18s, border-color .18s; }
+.interview-card:hover{ box-shadow:var(--shadow-md); border-color:var(--brand-100); transform:translateY(-1px); }
+.ic-company{ width:46px; height:46px; border-radius:12px; flex-shrink:0; display:grid; place-items:center; font-size:20px; font-weight:700; color:#fff; background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+.ic-main{ flex:1; min-width:0; }
+.ic-main h3{ margin:0; font-size:15px; font-weight:700; }
+.ic-main .meta{ margin-top:4px; font-size:13px; color:var(--ink-500); display:flex; flex-wrap:wrap; gap:6px 16px; }
+.ic-main .meta span{ display:inline-flex; align-items:center; gap:5px; }
+.ic-side{ text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:10px; flex-shrink:0; }
+.ic-side .expire{ font-size:11px; color:var(--ink-400); }
+
+/* ---------- 面试前准备 ---------- */
+.prep-wrap{ max-width:760px; margin:0 auto; }
+.steps{ display:flex; gap:8px; margin-bottom:28px; }
+.step{ flex:1; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-400); }
+.step .n{ width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:700; background:#eef2f7; color:var(--ink-500); flex-shrink:0; }
+.step .bar{ flex:1; height:2px; background:var(--line); border-radius:2px; }
+.step.active{ color:var(--brand); font-weight:600; }
+.step.active .n{ background:var(--brand); color:#fff; }
+.step.done{ color:var(--success); }
+.step.done .n{ background:var(--success-bg); color:var(--success); border:1px solid #a7f3d0; }
+.prep-card{ padding:28px 30px; margin-bottom:18px; }
+.prep-card h3{ margin:0 0 4px; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.prep-card .desc{ margin:0 0 20px; font-size:13px; color:var(--ink-500); }
+
+.mic-box{ display:flex; align-items:center; gap:20px; padding:18px 20px; border:1px solid var(--line); border-radius:var(--r-md); }
+.mic-visual{ width:56px; height:56px; border-radius:50%; background:var(--brand-50); color:var(--brand); display:grid; place-items:center; font-size:24px; flex-shrink:0; }
+.mic-visual.recording{ background:var(--danger-bg); color:var(--danger); }
+.mic-info{ flex:1; }
+.mic-info b{ display:block; font-size:14px; }
+.mic-info span{ font-size:12px; color:var(--ink-500); }
+.wave{ display:flex; align-items:center; gap:3px; height:28px; }
+.wave i{ width:3px; border-radius:2px; background:var(--brand); height:6px; }
+.wave.on i{ animation:wave 1s ease-in-out infinite; }
+.wave i:nth-child(1){ animation-delay:0s } .wave i:nth-child(2){ animation-delay:.12s }
+.wave i:nth-child(3){ animation-delay:.24s } .wave i:nth-child(4){ animation-delay:.06s }
+.wave i:nth-child(5){ animation-delay:.18s } .wave i:nth-child(6){ animation-delay:.3s }
+.wave i:nth-child(7){ animation-delay:.1s } .wave i:nth-child(8){ animation-delay:.22s }
+@keyframes wave{ 0%,100%{ height:6px } 50%{ height:24px } }
+
+.notice-list{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.notice-list li{ display:flex; gap:12px; font-size:14px; align-items:flex-start; }
+.notice-list li .ic{ width:22px; height:22px; border-radius:6px; background:var(--brand-50); color:var(--brand); display:grid; place-items:center; font-size:13px; flex-shrink:0; margin-top:2px; }
+.notice-list li b{ display:block; }
+.notice-list li span{ color:var(--ink-500); font-size:13px; }
+
+.consent-item{ display:flex; gap:12px; padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:10px; align-items:flex-start; cursor:pointer; transition:border-color .15s, background .15s; }
+.consent-item:hover{ border-color:#cbd5e1; }
+.consent-item.checked{ border-color:var(--brand); background:var(--brand-50); }
+.consent-item input{ margin-top:3px; width:16px; height:16px; accent-color:var(--brand); cursor:pointer; }
+.consent-item b{ display:block; font-size:14px; }
+.consent-item span{ font-size:12px; color:var(--ink-500); }
+.consent-all{ font-size:12px; color:var(--ink-400); line-height:1.7; padding:4px 16px 0; }
+
+.prep-actions{ display:flex; gap:12px; margin-top:8px; }
+.prep-actions .btn-primary{ flex:1; }
+
+/* ---------- 面试对话 ---------- */
+#view-chat{ max-width:960px; margin:0 auto; }
+.chat-shell{ overflow:hidden; display:flex; flex-direction:column; height:calc(100vh - 96px); min-height:560px; }
+.chat-header{ padding:16px 22px; border-bottom:1px solid var(--line-soft); display:flex; align-items:center; gap:14px; flex-shrink:0; }
+.ai-presence{ display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+.ai-avatar{ width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--brand),var(--ai)); color:#fff; display:grid; place-items:center; flex-shrink:0; box-shadow:var(--shadow-md); }
+.ai-avatar svg{ width:24px; height:24px; }
+.ai-presence .who{ min-width:0; }
+.ai-presence .who b{ display:flex; align-items:center; gap:7px; font-size:15px; }
+.ai-presence .who .online{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--success); }
+.ai-presence .who .online::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--success); box-shadow:0 0 0 3px rgba(5,150,105,.15); }
+.ai-presence .who .post{ font-size:12px; color:var(--ink-500); margin-top:1px; }
+.chat-meta{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.pill{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:999px; font-size:12px; font-weight:600; background:var(--bg); border:1px solid var(--line); color:var(--ink-700); }
+.pill.clock{ font-variant-numeric:tabular-nums; }
+.icon-btn{ width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink-700); display:grid; place-items:center; font-size:16px; transition:background .15s, border-color .15s; }
+.icon-btn:hover{ background:var(--bg); }
+.icon-btn.active{ background:var(--brand-50); border-color:var(--brand); color:var(--brand); }
+.chat-progress{ height:4px; background:var(--line-soft); flex-shrink:0; }
+.chat-progress .fill{ height:100%; width:0; background:linear-gradient(90deg,var(--brand),var(--ai)); transition:width .5s ease; }
+
+.chat-body{ flex:1; overflow-y:auto; padding:24px 22px; background:linear-gradient(180deg,#fbfbfe 0%,var(--bg) 100%); }
+.msg{ display:flex; gap:10px; margin-bottom:18px; }
+.msg .bubble{ max-width:76%; padding:12px 16px; border-radius:14px; font-size:14px; line-height:1.75; position:relative; }
+.msg.ai{ justify-content:flex-start; }
+.msg.ai .bubble{ background:#fff; border:1px solid var(--line-soft); border-top-left-radius:4px; box-shadow:var(--shadow-sm); }
+.msg.user{ justify-content:flex-end; }
+.msg.user .bubble{ background:linear-gradient(135deg,var(--brand),var(--brand-700)); color:#fff; border-top-right-radius:4px; box-shadow:var(--shadow-md); }
+.msg .m-avatar{ width:34px; height:34px; border-radius:9px; flex-shrink:0; display:grid; place-items:center; color:#fff; margin-top:2px; }
+.msg.ai .m-avatar{ background:linear-gradient(135deg,var(--brand),var(--ai)); }
+.msg.user .m-avatar{ order:2; background:linear-gradient(135deg,#94a3b8,#64748b); font-size:12px; font-weight:700; }
+.typing-dots{ display:flex; gap:4px; padding:4px 2px; }
+.typing-dots span{ width:6px; height:6px; border-radius:50%; background:var(--ink-400); animation:blink 1.2s infinite; }
+.typing-dots span:nth-child(2){ animation-delay:.15s; } .typing-dots span:nth-child(3){ animation-delay:.3s; }
+@keyframes blink{ 0%,100%{ opacity:.25 } 50%{ opacity:1 } }
+
+.chat-input{ padding:14px 18px; border-top:1px solid var(--line-soft); background:#fff; flex-shrink:0; }
+.chat-input .row{ display:flex; align-items:flex-end; gap:10px; }
+.chat-input textarea{
+  flex:1; resize:none; border:1px solid var(--line); border-radius:var(--r-md);
+  padding:11px 14px 24px; font-size:14px; line-height:1.6; outline:none; max-height:120px;
+  transition:border-color .15s, box-shadow .15s;
+}
+.chat-input textarea:focus{ border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-50); }
+.chat-input .counter{ position:absolute; right:12px; bottom:6px; font-size:11px; color:var(--ink-400); }
+.chat-input .ta-wrap{ flex:1; position:relative; }
+.chat-input .hints{ display:flex; align-items:center; gap:14px; font-size:11px; color:var(--ink-400); margin-top:8px; }
+.chat-input .hints kbd{ padding:1px 6px; border-radius:5px; background:var(--bg); border:1px solid var(--line); font-family:inherit; font-size:10px; }
+.chat-input .tts{ margin-left:auto; font-size:12px; color:var(--ink-500); display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none; }
+.chat-input .tts:hover{ color:var(--brand); }
+
+/* ---------- 完成 / 结果 ---------- */
+.center-card{ max-width:520px; margin:40px auto; text-align:center; padding:48px 40px; }
+.big-icon{ width:72px; height:72px; border-radius:50%; margin:0 auto 20px; display:grid; place-items:center; font-size:32px; }
+.big-icon.ok{ background:var(--success-bg); color:var(--success); }
+.big-icon.wait{ background:var(--warning-bg); color:var(--warning); }
+.center-card h2{ margin:0 0 8px; font-size:22px; font-weight:800; }
+.center-card .lead{ color:var(--ink-500); margin:0 0 24px; }
+.status-chip{ display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 16px; border-radius:999px; font-size:13px; font-weight:600; margin-bottom:8px; }
+.status-chip .dot{ width:8px; height:8px; border-radius:50%; background:currentColor; animation:pulse 1.4s infinite; }
+@keyframes pulse{ 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
+.status-chip.eval{ background:var(--warning-bg); color:var(--warning); }
+.summary-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:24px 0; text-align:left; }
+.summary-grid .sg{ background:var(--bg); border-radius:var(--r-md); padding:14px; }
+.summary-grid .sg b{ display:block; font-size:13px; }
+.summary-grid .sg span{ font-size:12px; color:var(--ink-500); }
+.note-box{ text-align:left; background:var(--ai-soft); border:1px solid #ede9fe; border-radius:var(--r-md); padding:14px 16px; font-size:13px; color:var(--ink-700); line-height:1.7; margin-bottom:24px; }
+.note-box b{ color:var(--ai); }
+
+/* ---------- 弹窗 / Toast ---------- */
+.modal-backdrop{ position:fixed; inset:0; z-index:100; background:rgba(15,23,42,.44); display:grid; place-items:center; padding:24px; animation:fade .18s ease; }
+.modal{ width:100%; max-width:420px; background:#fff; border-radius:var(--r-lg); padding:28px; box-shadow:var(--shadow-lg); animation:pop .18s ease; }
+.modal h3{ margin:0 0 8px; font-size:17px; font-weight:700; }
+.modal p{ margin:0 0 24px; color:var(--ink-500); font-size:14px; }
+.modal .actions{ display:flex; gap:10px; justify-content:flex-end; }
+@keyframes fade{ from{ opacity:0 } to{ opacity:1 } }
+@keyframes pop{ from{ opacity:0; transform:scale(.96) translateY(8px) } to{ opacity:1; transform:none } }
+
+#toastHost{ position:fixed; top:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:10px; }
+.toast{ background:var(--ink-900); color:#fff; padding:11px 18px; border-radius:10px; font-size:13px; box-shadow:var(--shadow-lg); animation:toastIn .25s ease; display:flex; align-items:center; gap:8px; }
+@keyframes toastIn{ from{ opacity:0; transform:translateY(-8px) } to{ opacity:1; transform:none } }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 860px){
+  #view-login{ grid-template-columns:1fr; }
+  .login-brand{ display:none; }
+  .stat-row{ grid-template-columns:repeat(2,1fr); }
+  .interview-card{ flex-wrap:wrap; }
+  .ic-side{ flex-direction:row; width:100%; align-items:center; justify-content:space-between; }
+}
+</style>
+</head>
+<body>
+
+<div id="toastHost"></div>
+
+<!-- ==================== 登录 / 注册 ==================== -->
+<section id="view-login" class="view">
+  <div class="login-brand">
+    <div class="logo">
+      <div class="mark">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>面试大师</h1>
+        <div class="sub">InterviewMaster · 候选人端</div>
+      </div>
+    </div>
+
+    <div class="headline">
+      <h2>你的 AI 面试官<br />公正、专业、随时可约</h2>
+      <p>无需下载任何软件。通过企业发送的邀请链接进入，与 AI 面试官进行一场自然、真实的对话面试，全程语音可选，作答更从容。</p>
+    </div>
+
+    <div class="features">
+      <div class="feature"><div class="ic">🕐</div><div><b>约 30 分钟，灵活安排</b><span>收到邀请后，在有效期内随时参加，无需预约排队。</span></div></div>
+      <div class="feature"><div class="ic">🎙️</div><div><b>文字 + 语音作答</b><span>打字或直接说话，AI 会自动转写，选择你最舒服的方式。</span></div></div>
+      <div class="feature"><div class="ic">🛡️</div><div><b>隐私授权透明可控</b><span>录音与转写需你明确授权，数据按《个人信息保护法》最小化处理。</span></div></div>
+    </div>
+
+    <div class="foot">© 2026 InterviewMaster · 面向企业招聘的 AI 初筛面试工具</div>
+  </div>
+
+  <div class="login-form">
+    <div class="box">
+      <h2>欢迎回来 👋</h2>
+      <p class="lead">登录后查看你的面试邀请与结果</p>
+
+      <div class="row">
+        <label class="field-label" for="loginAccount">手机号 / 邮箱</label>
+        <input class="input" id="loginAccount" type="text" placeholder="请输入手机号或邮箱" autocomplete="username" />
+      </div>
+      <div class="row">
+        <label class="field-label" for="loginPwd">密码</label>
+        <input class="input" id="loginPwd" type="password" placeholder="请输入密码" autocomplete="current-password" />
+        <div class="hint" style="margin-top:10px"><a href="#" class="forgot" onclick="toast('演示环境：任意账号密码即可登录');return false;">忘记密码？</a></div>
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-block" id="loginBtn">登 录</button>
+
+      <div class="divider">或</div>
+      <button class="btn btn-ghost btn-block" id="inviteBtn">🎫 使用面试邀请码进入</button>
+
+      <p class="switch">还没有账号？<a href="#" onclick="toast('演示环境：请直接点击登录体验');return false;">立即注册</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 应用（登录后） ==================== -->
+<div id="appShell" class="hidden">
+  <header class="topbar">
+    <div class="inner">
+      <div class="left">
+        <div class="logo-mark">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+        </div>
+        <div class="title">面试大师<small>候选人端</small></div>
+      </div>
+      <div class="user">
+        <div class="meta"><b id="userName">张明</b><span>求职者</span></div>
+        <div class="avatar">张</div>
+        <button class="logout" onclick="logout()">退出</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app">
+
+    <!-- ============ 面试大厅 ============ -->
+    <section id="view-hall" class="view">
+      <div class="page-head">
+        <h1>你好，张明 👋</h1>
+        <p>这是你收到的面试邀请，点击「进入面试」即可开始。</p>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat"><div class="num blue">1</div><div class="lbl">待参加</div></div>
+        <div class="stat"><div class="num amber">1</div><div class="lbl">评分中</div></div>
+        <div class="stat"><div class="num green">2</div><div class="lbl">已出报告</div></div>
+        <div class="stat"><div class="num">4</div><div class="lbl">全部邀请</div></div>
+      </div>
+
+      <h2 class="section-title">📋 我的面试</h2>
+      <div class="interview-list">
+        <!-- 待参加 -->
+        <div class="card interview-card">
+          <div class="ic-company">云</div>
+          <div class="ic-main">
+            <h3>高级 Java 后端工程师</h3>
+            <div class="meta">
+              <span>🏢 云启科技有限公司</span>
+              <span>🤖 AI 面试官</span>
+              <span>📝 6 题</span>
+              <span>⏱️ 约 30 分钟</span>
+            </div>
+          </div>
+          <div class="ic-side">
+            <span class="badge badge-waiting"><span class="dot"></span>待参加</span>
+            <div class="expire">邀请有效期至 2026-09-08 18:00</div>
+            <button class="btn btn-primary" onclick="enterPrep('高级 Java 后端工程师','云启科技有限公司')">进入面试</button>
+          </div>
+        </div>
+
+        <!-- 评分中 -->
+        <div class="card interview-card">
+          <div class="ic-company" style="background:linear-gradient(135deg,#0ea5e9,#2563eb)">青</div>
+          <div class="ic-main">
+            <h3>数据产品经理</h3>
+            <div class="meta">
+              <span>🏢 青橙科技有限公司</span>
+              <span>🤖 AI 面试官</span>
+              <span>📝 5 题</span>
+              <span>⏱️ 已完成</span>
+            </div>
+          </div>
+          <div class="ic-side">
+            <span class="badge badge-waiting"><span class="dot"></span>评分中</span>
+            <div class="expire">提交于 2026-09-04 14:22</div>
+            <button class="btn btn-ghost" disabled>评分中…</button>
+          </div>
+        </div>
+
+        <!-- 已出报告 -->
+        <div class="card interview-card">
+          <div class="ic-company" style="background:linear-gradient(135deg,#f59e0b,#f97316)">星</div>
+          <div class="ic-main">
+            <h3>前端开发工程师（React）</h3>
+            <div class="meta">
+              <span>🏢 星野网络</span>
+              <span>🤖 AI 面试官</span>
+              <span>📝 6 题</span>
+              <span>⏱️ 已完成</span>
+            </div>
+          </div>
+          <div class="ic-side">
+            <span class="badge badge-done"><span class="dot"></span>已出报告</span>
+            <div class="expire">提交于 2026-09-02 10:05</div>
+            <button class="btn btn-ghost" onclick="showView('result')">查看结果</button>
+          </div>
+        </div>
+
+        <!-- 已出报告 -->
+        <div class="card interview-card">
+          <div class="ic-company" style="background:linear-gradient(135deg,#10b981,#059669)">深</div>
+          <div class="ic-main">
+            <h3>算法工程师（NLP）</h3>
+            <div class="meta">
+              <span>🏢 深蓝智能</span>
+              <span>🤖 AI 面试官</span>
+              <span>📝 7 题</span>
+              <span>⏱️ 已完成</span>
+            </div>
+          </div>
+          <div class="ic-side">
+            <span class="badge badge-done"><span class="dot"></span>已出报告</span>
+            <div class="expire">提交于 2026-08-28 16:40</div>
+            <button class="btn btn-ghost" onclick="showView('result')">查看结果</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 面试前准备 ============ -->
+    <section id="view-prep" class="view hidden">
+      <div class="prep-wrap">
+        <div class="page-head">
+          <h1>面试前准备</h1>
+          <p id="prepPost">岗位：高级 Java 后端工程师 · 云启科技有限公司</p>
+        </div>
+
+        <div class="steps">
+          <div class="step active" id="step1"><span class="n">1</span>设备检测<span class="bar"></span></div>
+          <div class="step" id="step2"><span class="n">2</span>面试须知<span class="bar"></span></div>
+          <div class="step" id="step3"><span class="n">3</span>隐私授权</div>
+        </div>
+
+        <div class="card prep-card">
+          <h3>🎙️ 麦克风检测</h3>
+          <p class="desc">如你计划使用语音作答，请先确认麦克风可正常录音。</p>
+          <div class="mic-box">
+            <div class="mic-visual" id="micVisual">🎙️</div>
+            <div class="mic-info">
+              <b id="micTitle">尚未检测</b>
+              <span id="micSub">点击右侧按钮开始检测麦克风设备</span>
+            </div>
+            <div class="wave" id="wave"></div>
+            <button class="btn btn-ghost" id="micBtn2">开始检测</button>
+          </div>
+        </div>
+
+        <div class="card prep-card">
+          <h3>📋 面试须知</h3>
+          <p class="desc">开始前请了解本场面试的基本信息与规则。</p>
+          <ul class="notice-list">
+            <li><div class="ic">💼</div><div><b>面试岗位</b><span>高级 Java 后端工程师 · 云启科技有限公司</span></div></li>
+            <li><div class="ic">⏱️</div><div><b>时长与题量</b><span>共 6 题，预计 30 分钟（上限 45 分钟）</span></div></li>
+            <li><div class="ic">💬</div><div><b>作答形式</b><span>文字实时对话为主，可开启语音输入，AI 面试官会自动追问</span></div></li>
+            <li><div class="ic">✍️</div><div><b>作答建议</b><span>尽量具体、举例说明；每题作答后 AI 可能追问 1–2 次</span></div></li>
+          </ul>
+        </div>
+
+        <div class="card prep-card">
+          <h3>🛡️ 隐私与授权</h3>
+          <p class="desc">为保证面试与评分正常进行，需你授权以下信息处理（依据《个人信息保护法》）。</p>
+
+          <label class="consent-item" id="c-item1">
+            <input type="checkbox" id="c1" onchange="syncConsent()" />
+            <div><b>授权录音</b><span>允许在面试过程中通过麦克风采集你的语音</span></div>
+          </label>
+          <label class="consent-item" id="c-item2">
+            <input type="checkbox" id="c2" onchange="syncConsent()" />
+            <div><b>授权语音转写</b><span>将你的语音转写为文字，作为面试对话的一部分</span></div>
+          </label>
+          <label class="consent-item" id="c-item3">
+            <input type="checkbox" id="c3" onchange="syncConsent()" />
+            <div><b>授权 AI 分析与评分</b><span>由 AI 对你的作答进行分析、打分并生成评估报告</span></div>
+          </label>
+
+          <p class="consent-all">你的个人信息仅用于本次面试评估，采用最小化、用途限定原则处理，可依法申请查阅、更正与删除。</p>
+        </div>
+
+        <div class="prep-actions">
+          <button class="btn btn-ghost btn-lg" onclick="showView('hall')">返回</button>
+          <button class="btn btn-primary btn-lg" id="startBtn" disabled onclick="startInterview()">开始面试</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 面试对话 ============ -->
+    <section id="view-chat" class="view hidden">
+      <div class="card chat-shell">
+        <div class="chat-header">
+          <div class="ai-presence">
+            <div class="ai-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+            </div>
+            <div class="who">
+              <b>AI 面试官 <span class="online">在线</span></b>
+              <div class="post" id="chatPost">高级 Java 后端工程师 · 云启科技有限公司</div>
+            </div>
+          </div>
+          <div class="chat-meta">
+            <span class="pill" id="qPill">第 0 / 6 题</span>
+            <span class="pill clock" id="clock">00:00</span>
+            <button class="icon-btn" id="ttsBtn" title="开启/关闭朗读面试官问题" onclick="toggleTTS()">🔊</button>
+            <button class="icon-btn" style="color:var(--danger)" title="结束面试" onclick="openEndModal()">⏹</button>
+          </div>
+        </div>
+        <div class="chat-progress"><div class="fill" id="progFill"></div></div>
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-input">
+          <div class="row">
+            <button class="icon-btn" id="micHold" title="按住说话（语音输入）" style="width:42px;height:42px;border-radius:12px">🎙️</button>
+            <div class="ta-wrap">
+              <textarea id="answerInput" rows="1" maxlength="3000" placeholder="在此输入你的回答，或按住左侧 🎙️ 语音作答…"></textarea>
+              <div class="counter" id="count">0/3000</div>
+            </div>
+            <button class="btn btn-primary" id="sendBtn" style="height:42px;border-radius:12px" onclick="sendMessage()">
+              发送
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+          <div class="hints">
+            <span><kbd>Enter</kbd> 发送 · <kbd>Shift</kbd>+<kbd>Enter</kbd> 换行</span>
+            <span class="tts" id="ttsHint" onclick="toggleTTS()">🔊 AI 问题朗读已开启</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 提交完成 ============ -->
+    <section id="view-complete" class="view hidden">
+      <div class="card center-card">
+        <div class="big-icon ok">✓</div>
+        <h2>面试已提交</h2>
+        <p class="lead">感谢你的作答，AI 面试官正在为你生成评估报告。</p>
+        <div class="status-chip eval"><span class="dot"></span>评分中 · 预计 1–3 分钟出报告</div>
+        <div class="summary-grid">
+          <div class="sg"><b>高级 Java 后端工程师</b><span>面试岗位</span></div>
+          <div class="sg"><b>6 / 6 题</b><span>完成进度</span></div>
+          <div class="sg"><b id="finalDuration">约 24 分钟</b><span>面试用时</span></div>
+        </div>
+        <div class="note-box">
+          <b>结果可见性说明：</b>详细评分与报告由企业方控制是否向你开放。如已开放，你可在「面试大厅」中点击「查看结果」查看。
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" onclick="backToHall()">返回面试大厅</button>
+      </div>
+    </section>
+
+    <!-- ============ 结果 ============ -->
+    <section id="view-result" class="view hidden">
+      <div class="card center-card">
+        <div class="big-icon ok">🎉</div>
+        <h2>面试已完成</h2>
+        <p class="lead">本场面试的评估报告已生成。</p>
+        <div class="status-chip eval" style="background:var(--success-bg);color:var(--success)"><span class="dot" style="animation:none"></span>已出报告</div>
+        <div class="summary-grid">
+          <div class="sg"><b>前端开发工程师（React）</b><span>面试岗位</span></div>
+          <div class="sg"><b>2026-09-02 10:05</b><span>完成时间</span></div>
+          <div class="sg"><b>已生成</b><span>报告状态</span></div>
+        </div>
+        <div class="note-box">
+          <b>结果可见性说明：</b>本场面试的详细评分与逐题点评暂未向你开放，由企业方控制展示。如需了解结果，可联系面试企业。
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" onclick="showView('hall')">返回面试大厅</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- 结束面试确认弹窗 -->
+<div class="modal-backdrop hidden" id="endModal">
+  <div class="modal">
+    <h3>确认结束面试？</h3>
+    <p>提交后将立即进入评分，无法继续作答。请确认你已答完所有问题。</p>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="closeEndModal()">再想想</button>
+      <button class="btn btn-danger" onclick="confirmEnd()">确认提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   交互逻辑（纯前端原型）
+   ============================================================ */
+const $ = (s) => document.querySelector(s);
+
+/* ---------- 视图切换 ---------- */
+const VIEWS = ['login','hall','prep','chat','complete','result'];
+function showView(name){
+  document.getElementById('view-login').classList.toggle('hidden', name !== 'login');
+  document.getElementById('appShell').classList.toggle('hidden', name === 'login');
+  VIEWS.forEach(v => {
+    const el = document.getElementById('view-' + v);
+    if(el) el.classList.toggle('hidden', v !== name);
+  });
+  if(name === 'chat'){ focusInput(); scrollChat(); }
+  window.scrollTo(0,0);
+}
+
+/* ---------- Toast ---------- */
+function toast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  $('#toastHost').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(()=>t.remove(),300); }, 2600);
+}
+
+/* ---------- 登录 ---------- */
+$('#loginBtn').addEventListener('click', login);
+$('#inviteBtn').addEventListener('click', () => { toast('演示环境：已使用邀请码进入'); login(); });
+$('#loginPwd').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
+function login(){
+  const acc = $('#loginAccount').value.trim();
+  if(acc) $('#userName').textContent = /@/.test(acc) ? acc.split('@')[0] : acc.slice(-4);
+  showView('hall');
+  toast('登录成功，欢迎回来 👋');
+}
+function logout(){
+  showView('login');
+  $('#loginAccount').value = ''; $('#loginPwd').value = '';
+  toast('已退出登录');
+}
+
+/* ---------- 面试前准备 ---------- */
+let currentPost = '高级 Java 后端工程师', currentCompany = '云启科技有限公司';
+function enterPrep(post, company){
+  currentPost = post; currentCompany = company;
+  $('#prepPost').textContent = '岗位：' + post + ' · ' + company;
+  $('#chatPost').textContent = post + ' · ' + company;
+  resetPrep();
+  showView('prep');
+}
+function resetPrep(){
+  ['c1','c2','c3'].forEach(id => { document.getElementById(id).checked = false; });
+  ['c-item1','c-item2','c-item3'].forEach(id => document.getElementById(id).classList.remove('checked'));
+  micOk = false; updateMicUI(); syncConsent();
+}
+let micOk = false;
+function updateMicUI(){
+  const v = $('#micVisual'), w = $('#wave');
+  if(micOk){
+    v.textContent = '✅'; v.classList.remove('recording'); v.style.background = 'var(--success-bg)'; v.style.color = 'var(--success)';
+    $('#micTitle').textContent = '麦克风正常';
+    $('#micSub').textContent = '检测通过，可正常录音用于语音作答';
+    $('#micBtn2').textContent = '重新检测';
+    w.classList.add('on');
+    w.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>';
+  }else{
+    v.textContent = '🎙️'; v.classList.remove('recording'); v.style.background = 'var(--brand-50)'; v.style.color = 'var(--brand)';
+    $('#micTitle').textContent = '尚未检测';
+    $('#micSub').textContent = '点击右侧按钮开始检测麦克风设备';
+    $('#micBtn2').textContent = '开始检测';
+    w.classList.remove('on'); w.innerHTML = '';
+  }
+  syncConsent();
+}
+$('#micBtn2').addEventListener('click', () => {
+  micOk = !micOk;
+  if(micOk){ toast('麦克风检测通过 🎙️'); }
+  updateMicUI();
+});
+function syncConsent(){
+  const all = ['c1','c2','c3'].every(id => document.getElementById(id).checked);
+  ['c-item1','c-item2','c-item3'].forEach((id,i) => {
+    document.getElementById(id).classList.toggle('checked', document.getElementById('c'+(i+1)).checked);
+  });
+  // 语音为可选项，仅「隐私授权」勾选齐全即可开始
+  $('#startBtn').disabled = !(all);
+  // 步骤高亮：设备检测通过视为 step1 完成
+  $('#step1').className = 'step ' + (micOk ? 'done' : 'active');
+}
+
+/* ---------- 面试对话 ---------- */
+const OPENING = '你好，我是本次面试的 AI 面试官，很高兴认识你。接下来我会围绕「高级 Java 后端工程师」这个岗位，向你提出 6 个问题，预计用时约 30 分钟。你可以用文字作答，也可以使用语音输入。回答尽量具体、有例子，我会根据你的回答适当追问。准备好后，我们开始第一题。';
+
+const TURNS = [
+  { text: OPENING, q: 0 },
+  { text: '请先做一个简短的自我介绍，并重点讲一个你最有代表性的后端项目经历，包括你在其中的角色和具体贡献。', q: 1 },
+  { text: '你提到负责了核心模块的设计，能再具体说说这个模块在并发量上来之后，你做过哪些针对性的优化吗？', q: 1 },
+  { text: '在你的项目里，是否遇到过性能瓶颈？请描述一次你定位问题、分析原因并最终解决它的完整过程。', q: 2 },
+  { text: '请谈谈你对 MySQL 索引和事务隔离级别的理解，并结合你实际做过的项目，说明你是如何应用它们的。', q: 3 },
+  { text: '针对你刚才提到的场景，如果出现慢查询，你会优先关注哪些指标？用什么思路去定位和优化？', q: 3 },
+  { text: '介绍一下你在项目中使用 Redis 的典型场景，比如缓存、分布式锁等，并说明你是如何保证数据一致性的。', q: 4 },
+  { text: '如果线上服务突然出现大量接口超时，你会按照什么思路来排查和定位？请说出你的排查步骤。', q: 5 },
+  { text: '最后，关于这个岗位或我们公司，你有什么想了解或需要补充的吗？', q: 6 },
+  { text: '好的，感谢你的分享。你的面试已经全部完成，可以点击右上角的「结束面试」按钮提交本次面试，系统将自动评分并生成报告。祝你顺利！', q: 6 },
+];
+const TOTAL_Q = 6;
+let turnIndex = 0, ttsOn = true, interviewActive = false, timerInt = null, seconds = 0, aiBusy = false;
+
+function startInterview(){
+  showView('chat');
+  $('#chatBody').innerHTML = '';
+  turnIndex = 0; interviewActive = true; seconds = 0;
+  updateProgress(0);
+  startTimer();
+  // 开场 + 第一题
+  playNextTurn(() => playNextTurn());
+}
+
+function startTimer(){
+  clearInterval(timerInt);
+  timerInt = setInterval(() => {
+    seconds++;
+    const m = String(Math.floor(seconds/60)).padStart(2,'0');
+    const s = String(seconds%60).padStart(2,'0');
+    $('#clock').textContent = m + ':' + s;
+  }, 1000);
+}
+
+function playNextTurn(done){
+  const turn = TURNS[turnIndex];
+  if(!turn){ return; }
+  aiBusy = true;
+  $('#sendBtn').disabled = true;
+  addAIMessage(turn.text, () => {
+    updateProgress(turn.q);
+    turnIndex++;
+    aiBusy = false;
+    $('#sendBtn').disabled = false;
+    done && done();
+  });
+}
+
+function updateProgress(q){
+  $('#qPill').textContent = '第 ' + q + ' / ' + TOTAL_Q + ' 题';
+  $('#progFill').style.width = (q / TOTAL_Q * 100) + '%';
+}
+
+function addAIMessage(text, done){
+  const body = $('#chatBody');
+  const msg = document.createElement('div');
+  msg.className = 'msg ai';
+  msg.innerHTML =
+    '<div class="m-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>' +
+    '<div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+  body.appendChild(msg);
+  scrollChat();
+  const bubble = msg.querySelector('.bubble');
+  setTimeout(() => {
+    bubble.innerHTML = '<div class="bubble-text"></div>';
+    streamText(bubble.querySelector('.bubble-text'), text, done);
+  }, 550);
+}
+
+function streamText(el, text, done){
+  let i = 0;
+  const speed = 16;
+  const t = setInterval(() => {
+    el.textContent = text.slice(0, ++i);
+    scrollChat();
+    if(i >= text.length){ clearInterval(t); done && done(); }
+  }, speed);
+}
+
+function addUserMessage(text){
+  const body = $('#chatBody');
+  const msg = document.createElement('div');
+  msg.className = 'msg user';
+  msg.innerHTML = '<div class="bubble"></div><div class="m-avatar">张</div>';
+  msg.querySelector('.bubble').textContent = text;
+  body.appendChild(msg);
+  scrollChat();
+}
+
+function sendMessage(){
+  const input = $('#answerInput');
+  const val = input.value.trim();
+  if(!val || !interviewActive || aiBusy) return;
+  addUserMessage(val);
+  input.value = ''; input.style.height = 'auto'; updateCount();
+  if(turnIndex < TURNS.length){
+    playNextTurn(); // 内部会显示「正在输入」并推进题目
+  } else {
+    addAIMessage('（请点击右上角「结束面试」按钮提交本次面试）');
+  }
+}
+
+function scrollChat(){
+  const b = $('#chatBody');
+  b.scrollTop = b.scrollHeight;
+}
+function focusInput(){ $('#answerInput').focus(); }
+
+/* 输入框：Enter 发送 / Shift+Enter 换行 / 自动增高 / 字数 */
+const input = $('#answerInput');
+input.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+});
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  updateCount();
+});
+function updateCount(){ $('#count').textContent = input.value.length + '/3000'; }
+
+/* 语音输入（按住说话，原型仅模拟） */
+const micHold = $('#micHold');
+let holdTimer = null;
+micHold.addEventListener('mousedown', () => {
+  micHold.classList.add('active'); micHold.style.background = 'var(--danger-bg)';
+  toast('🎙️ 录音中…（松开结束）');
+  holdTimer = setTimeout(() => {
+    const demo = '我理解这个岗位需要扎实的 Java 基础和并发处理能力，我在上一家公司主导过订单中心的重构，把峰值 QPS 从 800 提升到了 3000 以上，主要做了分库分表和缓存预热。';
+    addUserMessage(demo);
+    if(!aiBusy && turnIndex < TURNS.length) playNextTurn();
+  }, 1600);
+});
+['mouseup','mouseleave'].forEach(ev => micHold.addEventListener(ev, () => {
+  if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+  micHold.classList.remove('active'); micHold.style.background = '';
+}));
+
+/* TTS 朗读开关 */
+function toggleTTS(){
+  ttsOn = !ttsOn;
+  $('#ttsBtn').classList.toggle('active', ttsOn);
+  $('#ttsBtn').textContent = ttsOn ? '🔊' : '🔇';
+  $('#ttsHint').textContent = ttsOn ? '🔊 AI 问题朗读已开启' : '🔇 AI 问题朗读已关闭';
+  toast(ttsOn ? '已开启 AI 问题朗读' : '已关闭 AI 问题朗读');
+}
+
+/* ---------- 结束面试 ---------- */
+function openEndModal(){ $('#endModal').classList.remove('hidden'); }
+function closeEndModal(){ $('#endModal').classList.add('hidden'); }
+function confirmEnd(){
+  closeEndModal();
+  clearInterval(timerInt); interviewActive = false;
+  $('#finalDuration').textContent = '约 ' + Math.max(1, Math.round(seconds/60)) + ' 分钟';
+  showView('complete');
+  toast('面试已提交，正在评分 ✅');
+}
+function backToHall(){ showView('hall'); }
+
+/* ---------- 初始化 ---------- */
+showView('login');
+</script>
+</body>
+</html>

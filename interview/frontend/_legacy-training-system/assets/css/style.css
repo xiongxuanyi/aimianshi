@@ -1,0 +1,114 @@
+/* =========================================================
+ * AI 模拟面试实训系统 — 补充样式
+ * 聊天气泡 / 滚动条 / 打字光标 / 维度进度条 / 历史卡片 / 打印
+ * ========================================================= */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+/* 细滚动条 */
+#chatWrap::-webkit-scrollbar,
+#res_text::-webkit-scrollbar,
+#historyList::-webkit-scrollbar {
+  width: 6px; height: 6px;
+}
+#chatWrap::-webkit-scrollbar-thumb,
+#res_text::-webkit-scrollbar-thumb,
+#historyList::-webkit-scrollbar-thumb {
+  background: rgba(109, 40, 217, 0.35);
+  border-radius: 999px;
+}
+#chatWrap::-webkit-scrollbar-thumb:hover,
+#res_text::-webkit-scrollbar-thumb:hover,
+#historyList::-webkit-scrollbar-thumb:hover {
+  background: rgba(109, 40, 217, 0.55);
+}
+
+/* 聊天气泡 */
+.bubble-row { display: flex; align-items: flex-end; gap: 8px; animation: fadeInUp .32s ease-out both; }
+.bubble-row.candidate { justify-content: flex-end; }
+.bubble-row.system { justify-content: center; }
+.bubble {
+  max-width: 78%; padding: 10px 12px; border-radius: 14px;
+  font-size: 14px; line-height: 1.7; position: relative; word-break: break-word;
+}
+.bubble.interviewer {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 6px 16px -14px rgba(30,58,138,.4);
+}
+.bubble.candidate {
+  background: linear-gradient(135deg,#4f46e5,#6d28d9); color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.bubble.system {
+  background: #f1f5f9; color: #475569; padding: 4px 10px;
+  font-size: 12px; border-radius: 999px;
+}
+.bubble-meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: #94a3b8; margin-top: 4px;
+}
+.bubble-row.interviewer-row .bubble-meta { justify-content: flex-start; }
+.bubble-row.candidate .bubble-meta { justify-content: flex-end; }
+.bubble-tts {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  padding: 2px 4px; color: #6366f1; border-radius: 6px;
+}
+.bubble-tts:hover { background: #eef2ff; }
+
+/* 打字机光标 */
+.typing-cursor::after {
+  content: "▌"; display: inline-block; margin-left: 2px;
+  color: #6d28d9; animation: typing 1.2s infinite;
+}
+
+/* 文件拖拽高亮 */
+#resumeDropzone.dragover {
+  border-color: #6d28d9 !important;
+  background: rgba(139,92,246,0.08);
+}
+
+/* 导航激活态 */
+.nav-btn.active {
+  background: linear-gradient(135deg,#4f46e5,#6d28d9);
+  color: #fff !important;
+  box-shadow: 0 6px 20px -12px rgba(109,40,217,.55);
+}
+
+/* 维度评分进度条 */
+.dim-row {
+  display: grid; grid-template-columns: 120px 1fr 48px;
+  gap: 10px; align-items: center;
+}
+.dim-bar-wrap { height: 10px; border-radius: 999px; background: #eef2ff; overflow: hidden; }
+.dim-bar-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg,#4f46e5,#a78bfa);
+  width: 0; transition: width 1s cubic-bezier(.2,.8,.2,1);
+}
+.score-rolling { font-variant-numeric: tabular-nums; }
+
+/* 历史记录卡片 */
+.history-card {
+  border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px;
+  background: #fff; transition: box-shadow .2s, transform .2s;
+}
+.history-card:hover {
+  box-shadow: 0 10px 26px -16px rgba(79,70,229,.35);
+  transform: translateY(-1px);
+}
+.history-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+}
+.badge-active  { background: #dcfce7; color: #15803d; }
+.badge-finished{ background: #e0e7ff; color: #4338ca; }
+.badge-closed  { background: #f1f5f9; color: #64748b; }
+.badge-expired { background: #fee2e2; color: #b91c1c; }
+
+/* 打印友好 */
+@media print {
+  header, .nav-btn, #reportAgainBtn, #reportPrintBtn, #toastHost,
+  #setupView, #interviewView, #historyView { display: none !important; }
+  #resultView { max-width: 100%; }
+}

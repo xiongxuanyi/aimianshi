@@ -1,0 +1,27 @@
+# 前端依赖与构建产物
+node_modules/
+dist/
+*.local
+npm-debug.log*
+yarn-error.log*
+
+# Python / 后端
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.env
+
+# 敏感数据与上传（简历等，禁止入库）
+uploads/
+*.pdf
+*.doc
+*.docx
+
+# 编辑器 / 系统 / 本地工具
+.DS_Store
+.idea/
+.vscode/
+.trae/
+*.log

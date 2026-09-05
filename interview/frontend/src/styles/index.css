@@ -1,0 +1,131 @@
+/* ============================================================
+   全局设计系统（候选人端 · PC Web）
+   关键词：专业 / 可信 / 冷静克制
+   —— 候选人处于紧张状态，界面要给人「公正、清晰、可预期」的感受。
+   ============================================================ */
+:root {
+  /* 品牌色 —— 靛蓝为主，紫罗兰点缀 AI 属性 */
+  --brand: #4f46e5;
+  --brand-600: #4338ca;
+  --brand-700: #3730a3;
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+  --ai: #7c3aed;
+  --ai-soft: #f5f3ff;
+
+  /* 中性色 */
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --ink-900: #0f172a;
+  --ink-700: #334155;
+  --ink-500: #64748b;
+  --ink-400: #94a3b8;
+  --line: #e2e8f0;
+  --line-soft: #eef2f7;
+
+  /* 语义色 */
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --info: #2563eb;
+  --info-bg: #eff6ff;
+
+  /* 尺寸与阴影 */
+  --r-lg: 16px;
+  --r-md: 12px;
+  --r-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 6px 24px -8px rgba(79, 70, 229, 0.16);
+  --shadow-lg: 0 24px 60px -24px rgba(15, 23, 42, 0.25);
+
+  /* Element Plus 主题覆写：对齐品牌色 */
+  --el-color-primary: #4f46e5;
+  --el-color-primary-light-3: #7870ec;
+  --el-color-primary-light-5: #9a94f1;
+  --el-color-primary-light-7: #bcb9f6;
+  --el-color-primary-light-8: #ceccf9;
+  --el-color-primary-light-9: #e0defb;
+  --el-color-primary-dark-2: #4338ca;
+  --el-color-success: #059669;
+  --el-color-warning: #d97706;
+  --el-color-danger: #dc2626;
+  --el-color-info: #64748b;
+  --el-border-radius-base: 8px;
+  --el-font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    "Segoe UI", "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--el-font-family);
+  background: var(--bg);
+  color: var(--ink-900);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+/* ---------- 通用布局工具 ---------- */
+.page-head {
+  margin-bottom: 24px;
+}
+.page-head h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  letter-spacing: 0.3px;
+}
+.page-head p {
+  margin: 0;
+  color: var(--ink-500);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Element Plus 细节微调 ---------- */
+.el-button {
+  font-weight: 600;
+}
+.el-button--large {
+  height: 48px;
+  padding: 0 28px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+.el-input__wrapper,
+.el-textarea__inner {
+  border-radius: 10px;
+}

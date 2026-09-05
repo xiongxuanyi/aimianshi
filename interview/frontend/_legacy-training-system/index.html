@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 模拟求职面试实训系统</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext x='8' y='46' font-size='44'%3E🤖%3C/text%3E%3C/svg%3E" />
+  <!-- Tailwind CDN（实训零构建模式）-->
+  <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#1e3a8a', 50: '#eef2ff', 100: '#e0e7ff', 600: '#4f46e5', 700: '#4338ca', 900: '#1e3a8a' },
+            ai:      { DEFAULT: '#6d28d9', 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
+          },
+          boxShadow: { soft: '0 10px 30px -12px rgba(79,70,229,.25)' },
+          keyframes: {
+            pulseSoft:  { '0%,100%': { boxShadow:'0 0 0 0 rgba(139,92,246,.55)'}, '50%':{boxShadow:'0 0 0 14px rgba(139,92,246,0)'} },
+            fadeInUp:   { '0%': { opacity:0, transform:'translateY(12px)'}, '100%':{opacity:1, transform:'translateY(0)'} },
+            typing:     { '0%,100%': { opacity:.2 }, '50%':{opacity:1} }
+          },
+          animation: {
+            pulseSoft: 'pulseSoft 1.4s infinite',
+            fadeInUp:  'fadeInUp .35s ease-out both',
+            typing:    'typing 1.2s infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+<!-- 顶部导航 -->
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
+  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-700 to-ai-600 text-white grid place-items-center shadow-soft">🤖</div>
+      <div>
+        <h1 class="text-lg font-bold leading-tight">AI 模拟求职面试实训系统</h1>
+        <p class="text-xs text-slate-500">FastAPI · 大模型 · Tailwind · 语音 ASR / TTS · MySQL 持久化</p>
+      </div>
+    </div>
+    <nav class="flex items-center gap-2 text-sm">
+      <button data-tab="setup"     class="nav-btn px-3 py-1.5 rounded-lg hover:bg-slate-100">1 · 简历与岗位</button>
+      <button data-tab="interview" class="nav-btn px-3 py-1.5 rounded-lg hover:bg-slate-100">2 · 模拟面试</button>
+      <button data-tab="history"   class="nav-btn px-3 py-1.5 rounded-lg hover:bg-slate-100">3 · 历史记录</button>
+      <button data-tab="result"    class="nav-btn px-3 py-1.5 rounded-lg hover:bg-slate-100">4 · 报告复盘</button>
+      <a href="/docs" target="_blank" class="ml-2 px-3 py-1.5 rounded-lg text-primary-700 border border-primary-200 hover:bg-primary-50">/docs 接口文档</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+  <!-- ============ 1. Setup：用户 + 简历 + JD ============ -->
+  <section id="setupView" class="view tab-pane">
+    <!-- 用户卡片（匿名/登录，可持久化到 users 表）-->
+    <div class="bg-white rounded-2xl shadow-soft border border-slate-100 p-5 animate-fadeInUp">
+      <h2 class="text-lg font-bold flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-ai-500 text-white grid place-items-center">0</span>
+        我的身份（结果与报告将持久化到 MySQL 历史记录）
+      </h2>
+      <div class="mt-3 grid sm:grid-cols-3 gap-3 text-sm">
+        <label class="block">
+          <span class="text-xs text-slate-500">昵称</span>
+          <input id="userNick" type="text" value="面试候选人" maxlength="32" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
+        </label>
+        <label class="block">
+          <span class="text-xs text-slate-500">邮箱（可选，用于登录/查历史）</span>
+          <input id="userEmail" type="email" placeholder="zhangsan@example.com" maxlength="128" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
+        </label>
+        <label class="block">
+          <span class="text-xs text-slate-500">密码（可选，空=匿名模式）</span>
+          <input id="userPwd" type="password" placeholder="留空=匿名" maxlength="64" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
+        </label>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <button id="userEnsureBtn" class="px-3 py-1.5 rounded-lg bg-primary-700 text-white hover:bg-primary-900">✅ 确认 / 注册身份（创建用户）</button>
+        <span id="userTag" class="text-xs text-slate-500">当前：未登录 / 匿名模式</span>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-6 mt-2">
+      <!-- 上传简历 -->
+      <div class="bg-white rounded-2xl shadow-soft p-6 border border-slate-100 animate-fadeInUp">
+        <h2 class="text-lg font-bold flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-primary-100 text-primary-700 grid place-items-center">1</span>
+          上传简历（PDF / Word）
+        </h2>
+        <p class="text-sm text-slate-500 mt-1">系统会解析姓名、教育、技能、项目与工作经历，自动匹配岗位定制题目。</p>
+
+        <div id="resumeDropzone" class="mt-4 border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-primary-500 hover:bg-primary-50/40 transition">
+          <div class="text-4xl">📄</div>
+          <div class="mt-2 text-sm text-slate-600">点击或拖拽文件到此区域</div>
+          <div class="text-xs text-slate-400 mt-1">支持 .pdf / .docx / .doc · 最大 5 MB</div>
+          <input id="resumeInput" type="file" accept=".pdf,.docx,.doc,application/pdf" class="hidden" />
+        </div>
+
+        <div id="resumeProgressWrap" class="mt-3 hidden">
+          <div class="flex justify-between text-xs text-slate-500 mb-1">
+            <span id="resumeProgressLabel">上传中 0%</span>
+            <span id="resumeFileName"></span>
+          </div>
+          <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div id="resumeProgressBar" class="h-full bg-gradient-to-r from-primary-700 to-ai-600 w-0 transition-[width] duration-200"></div>
+          </div>
+        </div>
+
+        <div id="resumeParsedCard" class="mt-4 hidden border border-primary-100 rounded-xl p-4 bg-primary-50/30">
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-semibold text-primary-900">简历解析结果</div>
+            <button id="clearResume" class="text-xs text-slate-500 hover:text-red-600">清空</button>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mt-2 text-xs">
+            <div class="col-span-3"><span class="text-slate-500">姓名：</span><span id="res_name" class="font-medium"></span></div>
+            <div class="col-span-3"><span class="text-slate-500">技能：</span><span id="res_skills" class="text-ai-700"></span></div>
+            <div class="col-span-3"><span class="text-slate-500">项目数：</span><span id="res_projects" class="font-medium"></span> 条</div>
+            <div class="col-span-3"><span class="text-slate-500">文本片段：</span>
+              <div id="res_text" class="mt-1 text-slate-600 text-[11px] leading-relaxed whitespace-pre-wrap max-h-32 overflow-auto bg-white p-2 rounded-md border border-slate-100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- JD -->
+      <div class="bg-white rounded-2xl shadow-soft p-6 border border-slate-100 animate-fadeInUp" style="animation-delay:60ms">
+        <h2 class="text-lg font-bold flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-primary-100 text-primary-700 grid place-items-center">2</span>
+          粘贴岗位 JD
+        </h2>
+        <p class="text-sm text-slate-500 mt-1">包含岗位名称、岗位职责、任职要求与软技能等关键字段（建议 ≥ 60 字）。</p>
+        <textarea id="jdText" rows="10" maxlength="4000" placeholder="示例：&#10;&#10;岗位：高级 Java 后端开发&#10;岗位职责：1. 负责核心业务系统后端设计与开发；2. 分析业务瓶颈，优化系统性能与稳定性。&#10;任职要求：1. 3 年以上 Java，Spring Boot / MyBatis；2. MySQL、Redis、Kafka；3. 高并发 / 分布式经验优先。" class="mt-3 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"></textarea>
+
+        <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+          <div>题目数量：
+            <select id="questionCount" class="ml-1 px-2 py-1 rounded-md border border-slate-200 outline-none bg-white">
+              <option value="5">5 题</option><option value="6">6 题</option>
+              <option value="7" selected>7 题（推荐）</option>
+              <option value="9">9 题</option><option value="12">12 题</option>
+            </select>
+          </div>
+          <div><span id="jdCharCount">0</span> / 4000</div>
+        </div>
+
+        <div class="mt-5 grid gap-3">
+          <button id="generateBtn" class="w-full rounded-xl py-3 font-semibold bg-gradient-to-r from-primary-700 to-ai-600 text-white shadow-soft hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            <span id="genBtnText">3 · 生成题库并开始面试（结果写入 MySQL）</span>
+            <svg id="genSpinner" class="hidden w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+          </button>
+          <button id="fillDemoBtn" class="w-full rounded-xl py-2 text-sm text-slate-500 border border-slate-200 hover:bg-slate-50">🧪 填入演示 JD（无需真实文件即可跑通）</button>
+        </div>
+      </div>
+
+      <!-- 下方：岗位考察点预览 -->
+      <div id="jdParsedCard" class="hidden lg:col-span-2 bg-white rounded-2xl shadow-soft p-6 border border-slate-100 animate-fadeInUp">
+        <h2 class="text-lg font-bold flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-ai-500 text-white grid place-items-center">🧠</span>
+          JD 考察点与题库预览
+        </h2>
+        <div class="grid lg:grid-cols-3 gap-4 mt-3 text-sm">
+          <div><div class="text-slate-500 text-xs mb-1">岗位</div><div id="jd_position" class="font-semibold">—</div></div>
+          <div><div class="text-slate-500 text-xs mb-1">所需技能</div><div id="jd_skills" class="text-ai-700">—</div></div>
+          <div><div class="text-slate-500 text-xs mb-1">考察知识点</div><div id="jd_kps" class="text-primary-700">—</div></div>
+        </div>
+        <ol id="questionsList" class="mt-4 space-y-2 list-decimal list-inside text-sm text-slate-700"></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. Interview：对话界面 ============ -->
+  <section id="interviewView" class="view tab-pane hidden">
+    <div class="bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-primary-50 to-ai-50">
+        <div>
+          <div class="text-sm text-slate-500">面试会话</div>
+          <div id="sessionInfo" class="font-semibold text-slate-800">—</div>
+        </div>
+        <div class="flex items-center gap-3 text-sm">
+          <div class="px-3 py-1 rounded-full bg-white border border-slate-200">
+            进度：<span id="roundInfo" class="font-semibold text-primary-700">0 / 0</span>
+          </div>
+          <button id="endBtn" class="px-3 py-1.5 rounded-full bg-red-500 text-white hover:bg-red-600 text-sm">结束面试</button>
+        </div>
+        <div class="w-full mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div id="progressBar" class="h-full bg-gradient-to-r from-primary-700 to-ai-600 w-0 transition-[width] duration-500"></div>
+        </div>
+      </div>
+
+      <div id="chatWrap" class="px-4 py-4 sm:px-6 sm:py-5 space-y-3 max-h-[62vh] overflow-y-auto bg-slate-50/60"></div>
+
+      <div class="px-4 py-3 sm:px-6 sm:py-4 border-t border-slate-100 bg-white">
+        <div class="flex items-end gap-2">
+          <button id="micBtn" title="语音输入（按住说话）" class="shrink-0 w-10 h-10 rounded-full border border-slate-200 hover:bg-slate-50 grid place-items-center select-none">🎙️</button>
+          <div class="flex-1 relative">
+            <textarea id="answerInput" rows="2" maxlength="3000" placeholder="在此输入回答，或长按 🎙️ 进行语音输入（回车发送 / Shift+回车 换行）" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 resize-none"></textarea>
+            <div class="absolute right-2 bottom-1.5 text-[10px] text-slate-400"><span id="answerCharCount">0</span>/3000</div>
+          </div>
+          <button id="sendBtn" class="shrink-0 px-4 h-10 rounded-xl bg-gradient-to-r from-primary-700 to-ai-600 text-white font-semibold shadow-soft hover:brightness-110 disabled:opacity-60 flex items-center gap-1">
+            <span id="sendLabel">发送</span>
+            <svg id="sendSpinner" class="hidden w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+          </button>
+        </div>
+        <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
+          <div class="flex items-center gap-1">⚡ 快捷键：
+            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">Enter</kbd> 发送
+            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">Shift+Enter</kbd> 换行
+          </div>
+          <button id="ttsToggle" class="ml-auto text-primary-700 hover:underline">🔊 开启 / 关闭自动朗读面试官问题</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. History：MySQL 历史记录（新增）============ -->
+  <section id="historyView" class="view tab-pane hidden">
+    <div class="bg-white rounded-2xl shadow-soft border border-slate-100 p-5 animate-fadeInUp">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold">📚 面试历史记录（MySQL 持久化）</h2>
+          <p class="text-sm text-slate-500 mt-1">按时间倒序展示你所有的模拟面试会话；点「查看报告」可直接跳到对应评分报告。</p>
+        </div>
+        <button id="historyRefreshBtn" class="px-3 py-1.5 rounded-lg bg-primary-700 text-white hover:bg-primary-900 text-sm">🔄 刷新列表</button>
+      </div>
+      <div class="mt-4 grid gap-3">
+        <div class="text-sm text-slate-500">未选择身份/未创建用户时，默认展示匿名会话历史。请先在 Setup 页面点击「✅ 确认 / 注册身份」再刷新。</div>
+        <div id="historyList" class="grid gap-3 text-sm"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. Result：报告复盘 ============ -->
+  <section id="resultView" class="view tab-pane hidden">
+    <div class="bg-white rounded-2xl shadow-soft border border-slate-100 p-6 animate-fadeInUp">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-bold">🎯 面试复盘报告</h2>
+          <p class="text-sm text-slate-500 mt-1" id="reportMeta">基于 AI 面试官对全程对话的多维度评估（结果已写入 MySQL evaluation_reports 表）</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="reportAgainBtn" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm">🔁 再模拟一次</button>
+          <button id="reportPrintBtn" class="px-3 py-1.5 rounded-lg bg-primary-700 text-white hover:bg-primary-900 text-sm">🖨️ 打印报告</button>
+        </div>
+      </div>
+
+      <div class="mt-6 grid lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-1 relative rounded-2xl bg-gradient-to-br from-primary-700 via-ai-600 to-purple-600 text-white p-6 shadow-soft overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10"></div>
+          <div class="relative">
+            <div class="text-sm opacity-80">综合得分</div>
+            <div class="flex items-end gap-2 mt-2">
+              <div id="r_total" class="text-6xl font-black leading-none">0</div>
+              <div class="pb-2 text-lg opacity-90">/ 100</div>
+            </div>
+            <div class="mt-3 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-sm font-semibold" id="r_level">评估中…</div>
+            <div class="mt-4 text-xs opacity-80 leading-relaxed" id="r_summary">—</div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2 rounded-2xl border border-slate-100 p-5">
+          <div class="font-semibold mb-3">📊 分维度评估</div>
+          <div id="r_dims" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <div class="mt-6 grid md:grid-cols-2 gap-4">
+        <div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5">
+          <div class="font-semibold text-emerald-700 flex items-center gap-2">✅ 表现亮点</div>
+          <p id="r_highlights" class="mt-2 text-sm text-slate-700 leading-7">—</p>
+        </div>
+        <div class="rounded-2xl border border-amber-100 bg-amber-50/40 p-5">
+          <div class="font-semibold text-amber-700 flex items-center gap-2">⚠️ 主要不足</div>
+          <p id="r_weaknesses" class="mt-2 text-sm text-slate-700 leading-7">—</p>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-2xl border border-slate-100 p-5">
+        <div class="font-semibold mb-3">🚀 改进建议（可直接落地）</div>
+        <ul id="r_suggestions" class="space-y-2 list-disc list-inside text-sm text-slate-700 leading-7"></ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="toastHost" class="fixed top-6 right-6 z-[100] space-y-2 w-80 max-w-[90vw]"></div>
+
+<dialog id="errModal" class="w-[90vw] max-w-md rounded-2xl p-0 border-0 shadow-2xl">
+  <div class="p-5">
+    <div class="flex items-center gap-2 text-red-600 font-semibold">❌ <span id="errTitle">出错了</span></div>
+    <div id="errBody" class="mt-2 text-sm text-slate-700 whitespace-pre-wrap"></div>
+    <div class="mt-4 text-right">
+      <button id="errCloseBtn" class="px-4 py-1.5 rounded-lg bg-primary-700 text-white hover:bg-primary-900">好的</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="/assets/js/app.js"></script>
+</body>
+</html>
